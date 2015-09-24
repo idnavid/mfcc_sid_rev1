@@ -92,6 +92,7 @@ selection_command = FeatureSelect+' -m SFS -i %s/%s -o %s/%s -x %s/%s'
 select_voiced_jobs = 'vad_selection_jobs.txt'
 fout = open(select_voiced_jobs,'w')
 for i in open(in_file_list):
+    file_name = i.strip()
     base_name = file_name.split('/')[-1].split('.')[0].strip()
     if ':' in file_name:
         channel = file_name.split(':')[1]
@@ -102,7 +103,7 @@ for i in open(in_file_list):
     else:
         channel = '1'
     feature_name = base_name+'_'+channel+'.htk'
-    vad_file_name = vad_dir+base_name+'_'+channel
+    vad_file_name = base_name+'_'+channel
     command_line = selection_command%(out_dir,feature_name,voiced_feature_dir,feature_name,vad_dir,vad_file_name)
     fout.write(command_line+'\n')
 fout.close()
