@@ -22,6 +22,7 @@ except:
 
 ### Pre-defined values:
 HCopy = '/export/bin/HCopy '
+FeatureSelect = '/export/bin/FeatureSelect '
 
 # Configuration file:
 # Currently extracts 12 dimensional MFCCs + D + DD (=36 dimensional). w/o Co
@@ -59,4 +60,49 @@ for i in open(in_file_list):
 
 fout.close()
 
-os.system("/home/nxs113020/bin/myJsplit -b 1 -M 400 %s"%(out_jobs))
+#os.system("/home/nxs113020/bin/myJsplit -b 1 -M 400 %s"%(out_jobs))
+
+## VAD jobs:
+vad_dir = '/erasable/nxs113020/vad_labels/'
+
+vad_command = 'python /scratch/nxs113020/speech_activity_detection/sad.py %s /scratch/nxs113020/speech_activity_detection/config_sad %s/%s idx'
+
+fout = open('vad_jobs','w')
+for i in open(in_file_list):
+    file_name = i.strip() 
+    if (in_format == 'wav'):
+        wav_name = file_name
+        base_name = actual_file_name.split('/')[-1].split('.wav')[0].strip()+'_1'
+    if (in_format == 'sph'):
+        channel = file_name.split(':')[1]
+        actual_file_name = file_name.split(':')[0]
+        base_name = actual_file_name.split('/')[-1].split('.sph')[0].strip()
+        wav_name = '%s/%s_%s.wav'%(wav_dir,base_name,channel)
+    command_line = vad_command%(wav_name,vad_dir,base_name+'_'+channel)
+    fout.write(command_line+'\n')
+fout.close()
+
+## Create feature selection list. 
+# Use VAD labels to replace features with new
+# features that only have voiced frames. 
+voiced_feature_dir = '/erasable/nxs113020/voiced_features/'
+
+selection_command = FeatureSelect+' -m SFS -i %s/%s -o %s/%s -x %s/%s'
+
+select_voiced_jobs = 'vad_selection_jobs.txt'
+fout = open(select_voiced_jobs,'w')
+for i in open(in_file_list):
+    base_name = file_name.split('/')[-1].split('.')[0].strip()
+    if ':' in file_name:
+        channel = file_name.split(':')[1]
+        if (channel == 'A') or (channel == '1'):
+            channel = '1'
+        if (channel == 'B') or (channel == '2'):
+            channel = '2'
+    else:
+        channel = '1'
+    feature_name = base_name+'_'+channel+'.htk'
+    vad_file_name = vad_dir+base_name+'_'+channel
+    command_line = selection_command%(out_dir,feature_name,voiced_feature_dir,feature_name,vad_dir,vad_file_name)
+    fout.write(command_line+'\n')
+fout.close()
