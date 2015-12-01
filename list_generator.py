@@ -29,7 +29,8 @@ FeatureSelect = '/export/bin/FeatureSelect '
 config = './create_mfcc.conf '
 
 # Directory to store features:
-out_dir = ' /erasable/nxs113020/features/'
+out_dir = ' /erasable/nxs113020/mfcc_opensad/'
+os.system('mkdir -p'+out_dir)
 wav_dir = ' /erasable/nxs113020/wavs/' # To store wavs constructed from sph files.
 
 # convert sph to wav command:
@@ -60,8 +61,9 @@ for i in open(in_file_list):
 
 fout.close()
 
-#os.system("/home/nxs113020/bin/myJsplit -b 1 -M 400 %s"%(out_jobs))
+os.system("/home/nxs113020/bin/myJsplit -b 1 -M 400 %s"%(out_jobs))
 
+exit()
 ## VAD jobs:
 vad_dir = '/erasable/nxs113020/vad_labels/'
 
