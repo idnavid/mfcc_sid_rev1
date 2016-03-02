@@ -26,20 +26,20 @@ FeatureSelect = '/export/bin/FeatureSelect '
 
 # Configuration file:
 # Currently extracts 12 dimensional MFCCs + D + DD (=36 dimensional). w/o Co
-config = './create_mfcc.conf '
+config = '/scratch2/nxs113020/feature_extraction/mfcc_sid_rev1/create_mfcc.conf '
 
 # Directory to store features:
-out_dir = ' /erasable/nxs113020/mfcc_opensad/'
+out_dir = ' /erasable/nxs113020/aging_sid_mfcc/'
 os.system('mkdir -p'+out_dir)
 wav_dir = ' /erasable/nxs113020/wavs/' # To store wavs constructed from sph files.
 
 # convert sph to wav command:
-sph2wav = 'sph2pipe -f wav -p -c %s %s > %s/%s_%s.wav'
+sph2wav = '/export/bin/sph2pipe -f wav -p -c %s %s > %s/%s_%s.wav'
 
 # Job list:
 out_jobs = './mfcc.jobs'
 
-
+channel_map = {'A':'1','B':'2','a':'1','b':'2','1':'1','2':'2'}
 
 fout = open(out_jobs,'w')
 for i in open(in_file_list):
@@ -52,6 +52,7 @@ for i in open(in_file_list):
     if (in_format == 'sph'):
         # First convert sph to wav:
         channel = file_name.split(':')[1]
+        channel = channel_map[channel]
         actual_file_name = file_name.split(':')[0]
         base_name = actual_file_name.split('/')[-1].split('.sph')[0].strip()
         wav_name = '%s/%s_%s.wav'%(wav_dir,base_name,channel)
@@ -61,13 +62,14 @@ for i in open(in_file_list):
 
 fout.close()
 
-os.system("/home/nxs113020/bin/myJsplit -b 1 -M 400 %s"%(out_jobs))
+#os.system("/home/nxs113020/bin/myJsplit -b 1 -M 400 %s"%(out_jobs))
 
-exit()
+#exit()
+
 ## VAD jobs:
 vad_dir = '/erasable/nxs113020/vad_labels/'
 
-vad_command = 'python /scratch/nxs113020/speech_activity_detection/sad.py %s /scratch/nxs113020/speech_activity_detection/config_sad %s/%s idx'
+vad_command = '. ~/.bashrc; python /scratch/nxs113020/speech_activity_detection/unsupervised_sad/sad.py %s /scratch/nxs113020/speech_activity_detection/unsupervised_sad/config_sad %s/%s idx'
 
 fout = open('vad_jobs','w')
 for i in open(in_file_list):
@@ -77,6 +79,7 @@ for i in open(in_file_list):
         base_name = actual_file_name.split('/')[-1].split('.wav')[0].strip()+'_1'
     if (in_format == 'sph'):
         channel = file_name.split(':')[1]
+        channel = channel_map[channel]
         actual_file_name = file_name.split(':')[0]
         base_name = actual_file_name.split('/')[-1].split('.sph')[0].strip()
         wav_name = '%s/%s_%s.wav'%(wav_dir,base_name,channel)
@@ -98,10 +101,7 @@ for i in open(in_file_list):
     base_name = file_name.split('/')[-1].split('.')[0].strip()
     if ':' in file_name:
         channel = file_name.split(':')[1]
-        if (channel == 'A') or (channel == '1'):
-            channel = '1'
-        if (channel == 'B') or (channel == '2'):
-            channel = '2'
+        channel = channel_map[channel]
     else:
         channel = '1'
     feature_name = base_name+'_'+channel+'.htk'
